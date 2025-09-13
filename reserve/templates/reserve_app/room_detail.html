@@ -1,0 +1,31 @@
+{% extends "reserve_app/base.html" %}
+{% block title %}Кімната {{ room.number }}{% endblock %}
+{% block content %}
+<h1>Кімната №{{ room.number }}</h1>
+<p>Категорія: <b>{{ room.category.name }}</b></p>
+<p>Місткість: {{ room.category.capacity }} ос.</p>
+<p>Ціна за ніч: {{ room.category.price_per_night }} ₴</p>
+<p>Статус: {% if room.is_active %}Доступна{% else %}Вимкнено{% endif %}</p>
+
+<hr>
+<h3>Забронювати</h3>
+{% if request.user.is_authenticated %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Забронювати</button>
+  </form>
+{% else %}
+  <p>Щоб бронювати, <a class="btn" href="/admin/login/?next={{ request.path }}">увійдіть</a>.</p>
+{% endif %}
+
+<hr>
+<h3>Останні бронювання цієї кімнати</h3>
+<ul>
+  {% for b in last_bookings %}
+    <li>{{ b.check_in }} → {{ b.check_out }} • {{ b.user.username }} • {{ b.get_status_display }}</li>
+  {% empty %}
+    <li>Поки немає.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

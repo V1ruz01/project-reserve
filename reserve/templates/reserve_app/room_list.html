@@ -1,0 +1,33 @@
+{% extends "reserve_app/base.html" %}
+{% block title %}Список кімнат{% endblock %}
+{% block content %}
+<h1>Кімнати</h1>
+
+<form method="get" style="margin:12px 0">
+  <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Пошук за номером">
+  <select name="cat">
+    <option value="">Усі категорії</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}" {% if cat|default:'' == c.id|stringformat:'s' %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <button class="btn" type="submit">Фільтрувати</button>
+</form>
+
+<table>
+  <tr><th>Номер</th><th>Категорія</th><th>Поверх</th><th>Статус</th><th></th></tr>
+  {% for r in rooms %}
+    <tr>
+      <td>{{ r.number }}</td>
+      <td>{{ r.category.name }}</td>
+      <td>{{ r.floor }}</td>
+      <td>{% if r.is_active %}Доступна{% else %}Вимкнено{% endif %}</td>
+      <td><a class="btn" href="{% url 'reserve_app:room_detail' r.pk %}">Деталі</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">Нічого не знайдено</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
