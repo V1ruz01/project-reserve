@@ -3,31 +3,60 @@
 {% block content %}
 <h1>Кімнати</h1>
 
-<form method="get" style="margin:12px 0">
-  <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Пошук за номером">
-  <select name="cat">
-    <option value="">Усі категорії</option>
-    {% for c in categories %}
-      <option value="{{ c.id }}" {% if cat|default:'' == c.id|stringformat:'s' %}selected{% endif %}>
-        {{ c.name }}
-      </option>
-    {% endfor %}
-  </select>
-  <button class="btn" type="submit">Фільтрувати</button>
+<form method="get" class="row gy-2 gx-3 align-items-end mb-3">
+  <div class="col-sm-5">
+    <label class="form-label">Found a Number</label>
+    <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Пошук за номером">
+  </div>
+  <div class="col-sm-5">
+    <label class="form-label">Category</label>
+    <select name="cat" class="form-select">
+      <option value="">All</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if cat|default:'' == c.id|stringformat:'s' %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class='col-sm-2'>
+    <button class="btn btn-primary w-100">Фільтрувати</button>
+  </div>
 </form>
 
-<table>
-  <tr><th>Номер</th><th>Категорія</th><th>Поверх</th><th>Статус</th><th></th></tr>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
   {% for r in rooms %}
-    <tr>
-      <td>{{ r.number }}</td>
-      <td>{{ r.category.name }}</td>
-      <td>{{ r.floor }}</td>
-      <td>{% if r.is_active %}Доступна{% else %}Вимкнено{% endif %}</td>
-      <td><a class="btn" href="{% url 'reserve_app:room_detail' r.pk %}">Деталі</a></td>
-    </tr>
+    <div class="col">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">
+            Room #{{r.number}}
+          </h5>
+          <p class="card-text-mb1">
+            <b>
+              Category: {{r.category.name}}
+            </b>
+          </p>
+          <p class="card-text-mb1">
+            <b>
+              Floor: {{r.floor}}
+            </b>
+          </p>
+          <span class="bagde {% if r.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+            {% if r.is_active %}Available{% else %}Turned Off{% endif %}
+          </span>
+        </div>
+        <div class="card-footer bg-white">
+          <a class="btn btn-outline-primary w-100" href="{% url 'reserve_app:room_detail' r.pk %}">
+            Details
+          </a>
+        </div>
+      </div>
+    </div>
   {% empty %}
-    <tr><td colspan="5">Нічого не знайдено</td></tr>
+  <p class="text-muted">
+    Nothing have been founded
+  </p>  
   {% endfor %}
-</table>
-{% endblock %}
+</div>
+{%endblock%}
