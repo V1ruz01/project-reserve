@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -27,12 +29,12 @@ def room_list(request):
 
 def room_detail(request, pk: int):
 
-    room = get_object_or_404(Room.objects.select_related('category', pk=pk))
+    room = get_object_or_404(Room.objects.select_related("category"), pk=pk)
     
     if request.method == 'POST':
-        if not request.user_is_authenticated:
+        if not request.user.is_authenticated:
             messages.error(request, 'Login to reserve a room')
-            return redirect(reverse('reserve_app:room_detal', args=[room.pk]))
+            return redirect(reverse('reserve_app/room_detal', args=[room.pk]))
         
         instance = Booking(room=room, user=request.user)
         form = BookingForm(request.POST, instance=instance)
@@ -45,15 +47,15 @@ def room_detail(request, pk: int):
                 form.add_error(None, getattr(e, 'message', str(e)))
             else:
                 messages.success(request, 'You have booked it successfully! Wait for the confirm!')
-                return redirect('reserve_app:my_bookings')
+                return redirect('reserve_app/my_bookings')
     else:
         form = BookingForm()
 
     last_bookings = (
-        room.booking.select_related('user').order_by('-created_at')[:5]
+        room.bookings.select_related('user').order_by('-created_at')[:5]
     )
     ctx = {'room':room, 'form': form, "last_bookings": last_bookings}
-    return render(request, 'reserve_app:room_detail.html', ctx)
+    return render(request, 'reserve_app/room_detail.html', ctx)
 
 @login_required
 def my_booking(request):
@@ -62,7 +64,7 @@ def my_booking(request):
         .filter(user=request.user)
         .order_by('-created_at')
     )
-    return render(request, 'reseve_app:my_bookings.html', {'bookings':bookings})
+    return render(request, 'reserve_app/my_bookings.html', {'bookings':bookings})
 
 @login_required
 def booking_cancel(request, pk: int):
@@ -72,3 +74,15 @@ def booking_cancel(request, pk: int):
         booking.save()
         messages.info(request, 'Booking got cancelled')
     return redirect('reserve_app:my_bookings')
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Your Account has been successfully created! Welcome!")
+            return redirect("reserve_app:room_list")
+        else:
+            form = UserCreationForm()
+            return render(request, 'reserve_app/auth/register.html', {form: 'form'})
